@@ -9,8 +9,6 @@ import org.w3c.dom.NodeList;
 import pojo.RawData;
 
 public class ElementParse {
-
-
     static int handleCategory(String category) {
 
         int category_id = PostgreConnect.checkCategory(category);
@@ -21,7 +19,15 @@ public class ElementParse {
          return category_id;
         }
     }
+    static int handleSubCategory(RawData rawData, int category_id) {
 
+        int sub_category_id = PostgreConnect.checkSubCategory(rawData.getHeading());
+        if (sub_category_id == 0) {
+           return PostgreConnect.insertSubCategory(rawData, category_id);
+        } else {
+            return sub_category_id;
+        }
+    }
     static void handleElements(Element element, RawData rawData, int category_id) {
 
         String tagName = element.getTagName();
@@ -38,15 +44,18 @@ public class ElementParse {
             case "SOURCES":
                 rawData.setSource(element.getTextContent());
                 break;
-            case "COUNTRY-STATS-GROUP": //SPECIAL-DATA-GROUP
-                subCategory_id = PostgreConnect.insertSubCategory(rawData, category_id);
+            case "SPECIAL-DATA-GROUP":
+                subCategory_id = ElementParse.handleSubCategory(rawData,category_id);
+                Country.handleSpecialDataGroup(element.getChildNodes(),subCategory_id);
+                break;
+            case "COUNTRY-STATS-GROUP":
+                subCategory_id = ElementParse.handleSubCategory(rawData,category_id);
                 Country.handleCountryStats((element.getElementsByTagName("COUNTRY-STATS")),subCategory_id);
                 break;
             default:
                 break;
         }
     }
-
     static void parseFiles(Document doc) {
 
         doc.getDocumentElement().normalize();

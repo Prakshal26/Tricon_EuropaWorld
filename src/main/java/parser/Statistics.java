@@ -28,7 +28,8 @@ public class Statistics {
             for(File file : files) {
                 if(file.isFile() && file.getName().endsWith(".xml")) {
                     Document doc = dBuilder.parse(file);
-
+                    System.out.println("Parsing file "+file_count);
+                    file_count++;
                     ElementParse.parseFiles(doc);
                 }
             }
