@@ -11,21 +11,37 @@ import java.util.LinkedHashMap;
 
 public class Country {
 
-    public static int handleCountry(String country, String countryAttribute) {
+    public static int handleCountry(String country, String countryAttribute, HashMap<String, Integer>  countryMap) {
 
-        int country_id = PostgreConnect.checkCountry(countryAttribute);
-        if (country_id == 0) {
-            int id = PostgreConnect.insertCountry(country, countryAttribute);
-            return id;
+        String tempAttribute = countryAttribute;
+
+        if (countryMap.containsKey(countryAttribute)) {
+            return countryMap.get(countryAttribute);
         } else {
-            return country_id;
+            if (countryAttribute.equalsIgnoreCase("*****")) {
+                countryAttribute = "";
+            }
+            int id = PostgreConnect.insertCountry(country, countryAttribute);
+            countryMap.put(tempAttribute,id);
+            return id;
         }
     }
 
-    public static String handleValueList(NodeList valueList, int country_id, int subCategory_id) {
+    public static String jsonConvertor(HashMap<String,String> hashMap) {
+        String jsonData = "";
+        try {
+            jsonData = new ObjectMapper().writeValueAsString(hashMap);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return jsonData;
+    }
+
+    public static String handleValueList(NodeList valueList) {
 
         HashMap<String,String> hashMap = new LinkedHashMap<>();
-        String key = "", jsonData = "";
+        String key = "";
 
         for (int i=0; i<valueList.getLength();i++) {
             Node valueNode = valueList.item(i);
@@ -40,17 +56,10 @@ public class Country {
                 hashMap.put(key,valueElement.getTextContent());
             }
         }
-        try {
-             jsonData = new ObjectMapper().writeValueAsString(hashMap);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        return jsonData;
-
+        return Country.jsonConvertor(hashMap);
     }
 
-    public static void handleCountryStats(NodeList countryStatsList, int subCategory_id) {
+    public static void handleCountryStats(NodeList countryStatsList, int subCategory_id, HashMap<String, Integer>  countryMap) {
 
         for (int i=0;i<countryStatsList.getLength();i++) {
             Node countryStatsNode = countryStatsList.item(i);
@@ -67,32 +76,24 @@ public class Country {
                     Element element = (Element) node;
                     if (element.getTagName()=="NAME") {
                         //Store the Country name and get the id.
-                        country_id = Country.handleCountry((element.getTextContent()), countryAttribute);
+                        country_id = Country.handleCountry((element.getTextContent()), countryAttribute, countryMap);
                     }
                     if (element.getTagName()=="DATA-GROUP") {
                         //Loop through all the sub elements of data group and create a JSON object.
-                       jsonData = Country.handleValueList(element.getChildNodes(), country_id, subCategory_id);
-
+                       jsonData = Country.handleValueList(element.getChildNodes());
                     }
                     if (element.getTagName()=="FOOTNOTE") {
                         HashMap<String, String> footMap = new LinkedHashMap<>();
                         footMap.put(element.getAttribute("REF-SYMBOL"),element.getTextContent());
-                        try {
-                            jsonFootNote = new ObjectMapper().writeValueAsString(footMap);
-                        }
-                        catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                        jsonFootNote = Country.jsonConvertor(footMap);
                     }
                 }
-                PostgreConnect.insertData(jsonData,jsonFootNote, country_id, subCategory_id);
-
             }
+            PostgreConnect.insertData(jsonData,jsonFootNote, country_id, subCategory_id);
         }
-
     }
 
-    public static void handleSpecialDataGroup(NodeList nodeList, int subCategory_id) {
+    public static void handleSpecialDataGroup(NodeList nodeList, int subCategory_id, HashMap<String, Integer>  countryMap) {
 
         int country_id =0;
         String jsonData = "";
@@ -102,28 +103,22 @@ public class Country {
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element element = (Element) node;
                 if (element.getTagName()=="NAME") {
-                    country_id = PostgreConnect.checkCountry(element.getTextContent());
-                    if (country_id == 0) {
-                        country_id = PostgreConnect.insertCountry(element.getTextContent(), "");
-                    }
+                    String countryAttribute = "*****";
+                    //Special Data Group Means World Data. It does not have ISO code so for
+                    //i am storing a dummy ISO code in local HashMap for World.
+                    country_id = Country.handleCountry((element.getTextContent()), countryAttribute, countryMap);
                 }
                 if (element.getTagName()=="DATA-GROUP") {
                     //Loop through all the sub elements of data group and create a JSON object.
-                   jsonData =  Country.handleValueList(element.getChildNodes(), country_id, subCategory_id);
+                   jsonData =  Country.handleValueList(element.getChildNodes());
                 }
                 if (element.getTagName()=="FOOTNOTE") {
                     HashMap<String, String> footMap = new LinkedHashMap<>();
                     footMap.put(element.getAttribute("ID"),element.getTextContent());
-                    try {
-                        jsonFootNote = new ObjectMapper().writeValueAsString(footMap);
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
+                    Country.jsonConvertor(footMap);
                 }
             }
-            PostgreConnect.insertData(jsonData,jsonFootNote, country_id, subCategory_id);
         }
+        PostgreConnect.insertData(jsonData,jsonFootNote, country_id, subCategory_id);
     }
 }

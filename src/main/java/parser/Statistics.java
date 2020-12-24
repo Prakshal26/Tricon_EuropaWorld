@@ -8,7 +8,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Statistics {
 
@@ -17,6 +20,10 @@ public class Statistics {
        // Connection connection = null;
         try {
             PostgreConnect.connect();
+
+            HashMap<String,Integer> categoryMap = new LinkedHashMap<>();
+            HashMap<String,Integer> subCategoryMap = new LinkedHashMap<>();
+            HashMap<String,Integer> countryMap = new LinkedHashMap<>();
 
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -30,11 +37,13 @@ public class Statistics {
                     Document doc = dBuilder.parse(file);
                     System.out.println("Parsing file "+file_count);
                     file_count++;
-                    ElementParse.parseFiles(doc);
+                    ElementParse.parseFiles(doc, categoryMap, subCategoryMap, countryMap);
                 }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 }

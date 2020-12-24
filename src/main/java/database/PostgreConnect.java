@@ -24,46 +24,6 @@ public class PostgreConnect {
         return connection;
     }
 
-    public static int checkCategory(String category)  {
-
-        int temp = -1;
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("select * from category where name ='" +category+"'");
-            //preparedStatement.setString(1, category);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (!resultSet.next()) {
-                temp = 0;
-            } else {
-               // resultSet.beforeFirst();
-                temp = resultSet.getInt(1);
-            }
-            preparedStatement.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return temp;
-    }
-
-
-    public static int checkSubCategory(String sub_Category)  {
-
-        int temp = -1;
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement("select * from sub_category where name ='" +sub_Category+"'");
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (!resultSet.next()) {
-                temp = 0;
-            } else {
-                // resultSet.beforeFirst();
-                temp = resultSet.getInt(1);
-            }
-            preparedStatement.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return temp;
-    }
-
     public static int insertCategory(String category) {
 
         int id = 0;
@@ -115,27 +75,6 @@ public class PostgreConnect {
         return id;
     }
 
-    public static int checkCountry(String countryAttribute)  {
-
-        int temp = -1;
-        try {
-            if (countryAttribute.contains("'")) {
-               countryAttribute = countryAttribute.replaceAll("'","&rsquo;");
-            }
-            PreparedStatement preparedStatement = connection.prepareStatement("select * from country where country_id ='" +countryAttribute+"'");
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (!resultSet.next()) {
-                temp = 0;
-            } else {
-                // resultSet.beforeFirst();
-                temp = resultSet.getInt(1);
-            }
-            preparedStatement.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return temp;
-    }
     public static int insertCountry(String country, String countryAttribute) {
 
         int id = 0;
